@@ -4,14 +4,31 @@
 </head>
 <body>
 <h1>Hi</h1>
+<label>Port:
+    <input type="text" id="port" />
+</label>
+<button id="btn_setport">Set</button>
+<ul id="logs">
+
+</ul>
 </body>
 <script type="text/javascript">
+    function byId (id) {
+        return document.getElementById(id);
+    }
+
+    var ul = byId('logs');
     var hostname = window.location.hostname;
     var ws = new WebSocket('ws://' + hostname + ':9875');
     ws.onopen = function () {}
     ws.onmessage = function (evt) {
         console.log(evt.data);
+        var log = evt.data.substring(5);
+        var li = document.createElement('li');
+        li.innerHTML = log;
+        ul.appendChild(li);
     }
+
 </script>
 </html>
 
