@@ -7,10 +7,23 @@ var _ws = null;
 require('http').createServer(function (req, rsp) { 
     console.log(req.url);
     if (req.url.indexOf('/log/') === 0) {
-        if (_ws) {
-            _ws.send(req.url);
-        } 
-        endRsp(rsp, {code: 0});
+        var matches = req.url.match(/^\/log\/(\d+)\/(.+)/);
+        if (matches) {
+            var port = matches[1];
+            var log = matches[2];
+            var ws = usedPorts[port];
+
+            if (ws) {
+                try {
+                    ws.send(log);
+                    endRsp(rsp, {code: 0});
+                } catch (e) {
+                    console.log('invalid ws for port:', port);
+                    delete usedPorts[port];
+                }
+            }
+        }
+        endRsp(rsp, {code: 1, message: 'invalid log url. use /log/[port]/[log] plz'});
     } else if (req.url.indexOf('/setport/') === 0) {
         var port = req.url.substring(9);
         if (usedPorts[port]) {
@@ -44,11 +57,14 @@ function endRsp(rsp, json) {
 }
 
 function startWSWithPort(port) {
+    console.log('create ws with port:', port);
     var wss = new WebSocketServer({port: port});
     usedPorts[port] = true;
     wss.on('connection', function (ws) {
+        console.log('port[' + port + '] connected');
         usedPorts[port] = ws;
         ws.on('close', function () {
+            console.log('unregister port:', port);
             delete usedPorts[port];
         });
     });

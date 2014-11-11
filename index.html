@@ -6,7 +6,7 @@
 <body>
 <h1>Hi</h1>
 <label>Port:
-    <input type="text" id="port" />
+    <input type="text" id="port" value="7777" />
 </label>
 <button id="btn_setport">Set</button>
 <ul id="logs">
@@ -19,20 +19,31 @@
     var ws = new WebSocket('ws://' + hostname + ':9875');
     ws.onopen = function () {}
     ws.onmessage = function (evt) {
-        var log = evt.data.substring(5);
-        log = decodeURIComponent(log);
-        var li = $('<li/>').text(log);
-        ul.append(li);
+
     }
 
     $('#btn_setport').on('click', function () {
         var port = $('#port').val().trim();
         $.getJSON('/setport/' + port, function (data) {
             console.log(data); 
+            if (data.code == 0) {
+                createLogWebSocket();
+            } else {
+                alert(data.message);
+            }
         });
     });
 
-    
+    function createLogWebSocket() {
+        var logWs = new WebSocket('ws://' + hostname + ':' + $('#port').val().trim());
+        logWs.onopen = function () {}
+        logWs.onmessage = function (evt) {
+            var log = evt.data;
+            log = decodeURIComponent(log);
+            var li = $('<li/>').text(log);
+            ul.append(li);
+        }
+    } 
     
 </script>
 </html>
